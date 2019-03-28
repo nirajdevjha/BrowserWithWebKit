@@ -14,6 +14,7 @@ typealias VoidBlock = () -> Void
 class WebViewController: UIViewController, WKNavigationDelegate {
     
     var webView: WKWebView!
+    var progressView: UIProgressView!
 
     //MARK:- Life cycle
     
@@ -28,6 +29,24 @@ class WebViewController: UIViewController, WKNavigationDelegate {
         super.viewDidLoad()
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Open", style: .plain, target: self, action: #selector(openTapped))
+       
+        let spacer = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        let refresh = UIBarButtonItem(barButtonSystemItem: .refresh, target: webView, action: #selector(webView.reload))
+        
+        progressView = UIProgressView(progressViewStyle: .default)
+        progressView.sizeToFit()
+        
+        let progressButton = UIBarButtonItem(customView: progressView)
+        
+        
+        toolbarItems = [progressButton, spacer, refresh]
+        
+        navigationController?.isToolbarHidden = false
+        
+        webView.addObserver(
+            self, forKeyPath: #keyPath(WKWebView.estimatedProgress),
+            options: .new,
+            context: nil)
         
         // Force unwrap as it is safe
         let url = URL(string: "https://www.apple.com")!
@@ -73,18 +92,16 @@ class WebViewController: UIViewController, WKNavigationDelegate {
         
     }
     
-    func open(openHandler: VoidBlock?) {
+   /** alternate method
+     func open(openHandler: VoidBlock?) {
         
         let ac = UIAlertController(title: "Open page...", message: nil, preferredStyle: .actionSheet)
-        /**
-        alternate method
+    
         let appleAction = UIAlertAction(title: "apple.com", style: .default) { _ in
             openHandler?()
         }
-        ac.addAction(appleAction) */
+        ac.addAction(appleAction)
         
-        ac.addAction(UIAlertAction(title: "apple.com", style: .default, handler: openPage))
-        ac.addAction(UIAlertAction(title: "yahoo.com", style: .default, handler: openPage))
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         
         // for iPAd:- it tells iOS where to anchor this action sheet
@@ -92,7 +109,7 @@ class WebViewController: UIViewController, WKNavigationDelegate {
         
         present(ac, animated: true)
         
-    }
+    } */
     
     //MARK:- WKNavigationDelegate
     
@@ -102,7 +119,15 @@ class WebViewController: UIViewController, WKNavigationDelegate {
         title = webView.title
     }
     
-
+    //MARK:- Key value observing
+    
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        
+        if keyPath == "estimatedProgress" {
+            progressView.progress = Float(webView.estimatedProgress)
+        }
+        
+    }
 
 }
 
