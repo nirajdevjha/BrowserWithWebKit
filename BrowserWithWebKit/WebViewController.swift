@@ -15,7 +15,8 @@ class WebViewController: UIViewController, WKNavigationDelegate {
     
     var webView: WKWebView!
     var progressView: UIProgressView!
-
+    var websites = ["apple.com", "yahoo.com"]
+    
     //MARK:- Life cycle
     
     // gets called before ViewDidLoad
@@ -49,7 +50,7 @@ class WebViewController: UIViewController, WKNavigationDelegate {
             context: nil)
         
         // Force unwrap as it is safe
-        let url = URL(string: "https://www.apple.com")!
+        let url = URL(string: "https://" + websites[0])!
         webView.load(URLRequest(url: url))
         webView.allowsBackForwardNavigationGestures = true
         
@@ -58,8 +59,10 @@ class WebViewController: UIViewController, WKNavigationDelegate {
     @objc private func openTapped() {
         
         let ac = UIAlertController(title: "Open page...", message: nil, preferredStyle: .actionSheet)
-        ac.addAction(UIAlertAction(title: "apple.com", style: .default, handler: openPage))
-        ac.addAction(UIAlertAction(title: "yahoo.com", style: .default, handler: openPage))
+        
+        for website in websites {
+             ac.addAction(UIAlertAction(title: website, style: .default, handler: openPage))
+        }
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
         // for iPAd:- it tells iOS where to anchor this action sheet
@@ -117,6 +120,22 @@ class WebViewController: UIViewController, WKNavigationDelegate {
         
         // set navigation title as website loaded
         title = webView.title
+    }
+    
+    // allows navigation or not
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+
+        let url = navigationAction.request.url
+
+        if let host = url?.host {
+            for website in websites {
+                if host.contains(website) {
+                    decisionHandler(.allow)
+                    return
+                }
+            }
+        }
+        decisionHandler(.cancel)
     }
     
     //MARK:- Key value observing
